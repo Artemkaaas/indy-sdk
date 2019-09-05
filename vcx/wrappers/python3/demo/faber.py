@@ -2,7 +2,7 @@ import asyncio
 import json
 import random
 from ctypes import cdll
-from time import sleep
+from time import sleep, time
 import platform
 
 import logging
@@ -47,8 +47,41 @@ async def main():
     # Set some additional configuration options specific to faber
     config['institution_name'] = 'Faber'
     config['institution_logo_url'] = 'http://robohash.org/234'
-    config['genesis_path'] = 'genesis.txn'
-    
+    config['genesis_path'] = 'docker_pool_transactions_genesis'
+
+    # steps
+    # 0. I use local pool. I did TAA preparation using Libindy.
+    # 1. I sent TAA_AML to ledger: {"indy_acc_type": "asdsadsad"}
+    # 2. I sent TAA to ledger: text: "my_indy_taa_text", version: "1.1" (Either you can sent TAA specifying only hash)
+    # 2.1 You can use Indy-CLI to get current TAA set on the Ledger
+    # 3. For vcx config you either can specify combination of text and version or only taaDigest
+    # 4. timeOfAcceptance is unix timestamp which means time of TAA acceptance (number) - current time here
+    # 5. vcx_config - for my pool {
+    #   ...,
+    #   "author_agreement": '{
+    #       "text": "my_indy_taa_text",
+    #       "version": "1.1",
+    #       "acceptanceMechanismType": "indy_acc_type",
+    #       "timeOfAcceptance": 1567662272}'
+    #   }'
+    #  6. Either you can use the same config but with usage taaDigest
+    #  {
+    #   ...,
+    #   "author_agreement": '{
+    #       "taaDigest": "6524e4a117f44e7a47e5a9040be4875b13f764b0496fd69de18d7fb64bbe8ef2",
+    #       "acceptanceMechanismType": "indy_acc_type",
+    #       "timeOfAcceptance": 1567662272}'
+    #   }'
+    # }
+    #
+
+    config['author_agreement'] = json.dumps({
+        "taaDigest": "6524e4a117f44e7a47e5a9040be4875b13f764b0496fd69de18d7fb64bbe8ef2",
+        "acceptanceMechanismType": "indy_acc_type",
+        "timeOfAcceptance":    int(time()) # timestamp  of acceptance (number)
+    })
+
+
     print("#2 Initialize libvcx with new configuration")
     await vcx_init_with_config(json.dumps(config))
 

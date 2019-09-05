@@ -1,7 +1,7 @@
 import asyncio
 import json
 from ctypes import cdll
-from time import sleep
+from time import sleep, time
 import platform
 
 import logging
@@ -37,7 +37,13 @@ async def main():
     # Set some additional configuration options specific to alice
     config['institution_name'] = 'alice'
     config['institution_logo_url'] = 'http://robohash.org/456'
-    config['genesis_path'] = 'docker.txn'
+    config['genesis_path'] = 'docker_pool_transactions_genesis'
+    config['author_agreement'] = json.dumps({
+        "text": "my_indy_taa_text",
+        "version": "1.1",
+        "acceptanceMechanismType": "indy_acc_type",
+        "timeOfAcceptance":    int(time())
+    })
 
     print("#8 Initialize libvcx with new configuration")
     await vcx_init_with_config(json.dumps(config))
