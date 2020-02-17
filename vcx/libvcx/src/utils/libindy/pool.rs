@@ -142,6 +142,8 @@ pub mod tests {
     };
     #[cfg(feature = "pool_tests")]
     use utils::devsetup::SetupLibraryWalletPoolZeroFees;
+    #[cfg(feature = "pool_tests")]
+    use utils::devsetup::SetupLibraryWalletPool;
 
     pub fn create_test_pool() {
         create_genesis_txn_file();

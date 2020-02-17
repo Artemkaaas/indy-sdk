@@ -35,12 +35,10 @@ pub struct SetupLibraryAgencyV1ZeroFees; // init indy wallet, init pool, provisi
 
 pub struct SetupLibraryAgencyV2; // init indy wallet, init pool, provision 2 agents. use protocol type 2.0
 
-pub struct SetupLibraryAgencyV2ZeroFees; // init indy wallet, init pool, provision 2 agents. use protocol type 2.0, set zero fees
-
 fn setup() {
+    threadpool::init();
     settings::clear_config();
     set_defaults();
-    threadpool::init();
     init_test_logging();
 }
 
@@ -220,7 +218,7 @@ impl Drop for SetupAgencyMock {
 impl SetupLibraryAgencyV1 {
     pub fn init() -> SetupLibraryAgencyV1 {
         setup();
-        setup_agency_env("1.0", false);
+        setup_agency_env("1.0");
         SetupLibraryAgencyV1
     }
 }
@@ -250,27 +248,12 @@ impl Drop for SetupLibraryAgencyV1ZeroFees {
 impl SetupLibraryAgencyV2 {
     pub fn init() -> SetupLibraryAgencyV2 {
         setup();
-        setup_agency_env("2.0", false);
+        setup_agency_env("2.0");
         SetupLibraryAgencyV2
     }
 }
 
 impl Drop for SetupLibraryAgencyV2 {
-    fn drop(&mut self) {
-        cleanup_agency_env();
-        tear_down()
-    }
-}
-
-impl SetupLibraryAgencyV2ZeroFees  {
-    pub fn init() -> SetupLibraryAgencyV2ZeroFees  {
-        setup();
-        setup_agency_env("2.0", true);
-        SetupLibraryAgencyV2ZeroFees
-    }
-}
-
-impl Drop for SetupLibraryAgencyV2ZeroFees  {
     fn drop(&mut self) {
         cleanup_agency_env();
         tear_down()
@@ -341,7 +324,7 @@ lazy_static! {
 
 fn init_test_logging(){
     TEST_LOGGING_INIT.call_once(|| {
-        LibvcxDefaultLogger::init(Some(String::from("vcx=trace"))).ok();
+        LibvcxDefaultLogger::init(Some(String::from("vcx=info"))).ok();
     })
 }
 

@@ -898,12 +898,12 @@ pub mod tests {
     use api::return_types_u32;
     use std::ptr;
     use std::ffi::CString;
+    use std::time::Duration;
     use utils::libindy::wallet::{delete_wallet, init_wallet};
     #[cfg(feature = "pool_tests")]
     use utils::libindy::payments::build_test_address;
     use utils::devsetup::*;
     use settings;
-    use utils::timeout::TimeoutUtils;
 
     #[test]
     fn test_get_token_info() {
