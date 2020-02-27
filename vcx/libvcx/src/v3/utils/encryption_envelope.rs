@@ -12,7 +12,7 @@ impl EncryptionEnvelope {
     pub fn create(message: &A2AMessage,
                   pw_verkey: Option<&str>,
                   did_doc: &DidDoc) -> VcxResult<EncryptionEnvelope> {
-        trace!("EncryptionEnvelope::create >>> message: {:?}, pw_verkey: {:?}, did_doc: {:?}", message, pw_verkey, did_doc);
+        println!("EncryptionEnvelope::create >>> message: {:?}, pw_verkey: {:?}, did_doc: {:?}", message, pw_verkey, did_doc);
 
         if ::settings::indy_mocks_enabled() { return Ok(EncryptionEnvelope(vec![])); }
 
@@ -28,6 +28,7 @@ impl EncryptionEnvelope {
             A2AMessage::Generic(message_) => message_.to_string(),
             message => json!(message).to_string()
         };
+        println!("message {}", message);
 
         let receiver_keys = json!(did_doc.recipient_keys()).to_string();
 

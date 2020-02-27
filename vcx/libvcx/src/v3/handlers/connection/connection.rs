@@ -100,6 +100,7 @@ impl Connection {
 
         let messages = self.get_messages()?;
         let agent_info = self.agent_info().clone();
+        println!("messages {:?}", messages);
 
         if let Some((uid, message)) = self.connection_sm.find_message_to_handle(messages) {
             self.handle_message(message.into())?;

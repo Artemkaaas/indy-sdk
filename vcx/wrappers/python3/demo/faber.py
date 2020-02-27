@@ -4,6 +4,7 @@ import random
 from ctypes import cdll
 from time import sleep
 
+import logging
 from demo_utils import file_ext
 from vcx.api.connection import Connection
 from vcx.api.credential_def import CredentialDef
@@ -15,7 +16,7 @@ from vcx.api.vcx_init import vcx_init_with_config
 from vcx.state import State, ProofState
 
 
-# logging.basicConfig(level=logging.DEBUG) uncomment to get logs
+# logging.basicConfig(level=0)
 
 # 'agency_url': URL of the agency
 # 'agency_did':  public DID of the agency
@@ -24,13 +25,13 @@ from vcx.state import State, ProofState
 # 'wallet_key': encryption key for encoding wallet
 # 'payment_method': method that will be used for payments
 provisionConfig = {
-    'agency_url': 'http://localhost:8080',
-    'agency_did': 'VsKV7grR1BUE29mG2Fm2kX',
-    'agency_verkey': 'Hezce2UWMZ3wUhVkh2LfKSs8nDzWwzs2Win7EzNN3YaR',
+    'agency_url': 'https://eas-team1.pdev.evernym.com',
+    'agency_did': 'CV65RFpeCtPu82hNF9i61G',
+    'agency_verkey': '7G3LhXFKXKTMv7XGx1Qc9wqkMbwcU2iLBHL8x1JXWWC2',
     'wallet_name': 'faber_wallet',
     'wallet_key': '123',
     'payment_method': 'null',
-    'enterprise_seed': '000000000000000000000000Trustee1',
+    'enterprise_seed': '00000000000000000000000000000My1',
     'protocol_type': '3.0',
 }
 
@@ -43,11 +44,10 @@ async def main():
     config = await vcx_agent_provision(json.dumps(provisionConfig))
     config = json.loads(config)
     # Set some additional configuration options specific to faber
-    config['institution_name'] = 'Faber'
+    config['institution_name'] = 'Faber main'
     config['institution_logo_url'] = 'http://robohash.org/234'
     config['genesis_path'] = 'docker.txn'
-    config['payment_method'] = 'null'
-    config['protocol_type'] = '3.0'
+    config['author_agreement'] = "{\"taaDigest\":\"8cee5d7a573e4893b08ff53a0761a22a1607df3b3fcd7e75b98696c92879641f\",\"acceptanceMechanismType\":\"click_agreement\",\"timeOfAcceptance\":1582789204}"
 
     print("#2 Initialize libvcx with new configuration")
     await vcx_init_with_config(json.dumps(config))
@@ -72,10 +72,11 @@ async def main():
 
     print("#6 Poll agency and wait for alice to accept the invitation (start alice.py now)")
     connection_state = await connection_to_alice.get_state()
-    while connection_state != State.Accepted:
-        sleep(2)
+    while connection_state != State.RequestReceived:
+        sleep(5)
         await connection_to_alice.update_state()
         connection_state = await connection_to_alice.get_state()
+        print("State: " + str(connection_state))
 
     print("Connection is established")
 
@@ -84,12 +85,24 @@ async def main():
             "Would you like to do? \n "
             "1 - issue credential \n "
             "2 - ask for proof request \n "
+            "3 - send ping \n "
+            "4 - update connection state \n "
             "else finish \n") \
             .lower().strip()
         if answer == '1':
             await issue_credential(connection_to_alice, cred_def_handle)
         elif answer == '2':
             await ask_for_proof(connection_to_alice, config['institution_did'])
+        elif answer == '3':
+            await connection_to_alice.send_ping(None)
+            connection_state = await connection_to_alice.get_state()
+            while connection_state != State.Accepted:
+                sleep(5)
+                await connection_to_alice.update_state()
+                connection_state = await connection_to_alice.get_state()
+                print("State: " + str(connection_state))
+        elif answer == '4':
+            await connection_to_alice.update_state()
         else:
             break
 

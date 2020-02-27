@@ -156,6 +156,13 @@ impl From<(RespondedState, Ping)> for CompleteState {
     }
 }
 
+impl From<RespondedState> for CompleteState {
+    fn from(state: RespondedState) -> CompleteState {
+        trace!("DidExchangeStateSM: transit state from RespondedState to CompleteState");
+        CompleteState { did_doc: state.did_doc, pending_messages: HashMap::new(), protocols: None }
+    }
+}
+
 impl From<(CompleteState, Vec<ProtocolDescriptor>)> for CompleteState {
     fn from((state, protocols): (CompleteState, Vec<ProtocolDescriptor>)) -> CompleteState {
         trace!("DidExchangeStateSM: transit state from CompleteState to CompleteState");
@@ -391,6 +398,10 @@ impl DidExchangeSM {
                             debug!("Ping message received");
                             return Some((uid, ping));
                         }
+                        ping @ A2AMessage::PingResponse(_) => {
+                            debug!("Ping message received");
+                            return Some((uid, ping));
+                        }
                         problem_report @ A2AMessage::ConnectionProblemReport(_) => {
                             debug!("ProblemReport message received");
                             return Some((uid, problem_report));
@@ -434,7 +445,7 @@ impl DidExchangeSM {
     }
 
     pub fn step(self, message: DidExchangeMessages) -> VcxResult<DidExchangeSM> {
-        trace!("DidExchangeStateSM::step >>> message: {:?}", message);
+        println!("DidExchangeStateSM::step >>> message: {:?}", message);
 
         let DidExchangeSM { source_id, mut agent_info, state } = self;
 
@@ -501,6 +512,18 @@ impl DidExchangeSM {
                             }
                             DidExchangeMessages::ProblemReportReceived(problem_report) => {
                                 ActorDidExchangeState::Inviter(DidExchangeState::Null((state, problem_report).into()))
+                            }
+                            DidExchangeMessages::SendPing(comment) => {
+                                let ping =
+                                    Ping::create()
+                                        .request_response()
+                                        .set_comment(comment);
+
+                                agent_info.send_message(&ping.to_a2a_message(), &state.did_doc).ok();
+                                ActorDidExchangeState::Inviter(DidExchangeState::Responded(state))
+                            }
+                            DidExchangeMessages::PingResponseReceived(_ping_response) => {
+                                ActorDidExchangeState::Inviter(DidExchangeState::Completed(state.into()))
                             }
                             _ => {
                                 ActorDidExchangeState::Inviter(DidExchangeState::Responded(state))
