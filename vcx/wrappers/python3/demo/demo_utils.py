@@ -14,6 +14,7 @@ from vcx.api.credential import Credential
 from vcx.api.proof import Proof
 from vcx.api.disclosed_proof import DisclosedProof
 from vcx.api.schema import Schema
+from vcx.api.utils import vcx_messages_download, vcx_messages_update_status
 from vcx.state import State, ProofState
 
 
@@ -79,7 +80,6 @@ async def send_credential_request(my_connection, cred_def_json, schema_attrs, cr
 
 
 async def send_proof_request(my_connection, institution_did, proof_attrs, proof_uuid, proof_name, proof_predicates):
-
     print("#19 Create a Proof object")
     proof = await Proof.create(proof_uuid, proof_name, proof_attrs, {}, requested_predicates=proof_predicates)
 
@@ -244,7 +244,8 @@ def load_postgres_plugin(provisionConfig):
 
     provisionConfig['wallet_type'] = 'postgres_storage'
     provisionConfig['storage_config'] = '{"url":"localhost:5432"}'
-    provisionConfig['storage_credentials'] = '{"account":"postgres","password":"mysecretpassword","admin_account":"postgres","admin_password":"mysecretpassword"}'
+    provisionConfig[
+        'storage_credentials'] = '{"account":"postgres","password":"mysecretpassword","admin_account":"postgres","admin_password":"mysecretpassword"}'
 
     print("Success, loaded postgres wallet storage")
 
@@ -266,6 +267,21 @@ async def create_postgres_wallet(provisionConfig):
         if ex.error_code == ErrorCode.PoolLedgerConfigAlreadyExistsError:
             pass
     print("Postgres wallet provisioned")
+
+
+async def download_message(pw_did: str):
+    messages = await vcx_messages_download("MS-103", None, pw_did)
+    message = json.loads(messages.decode())[0]['msgs'][0]
+    decryptedPayload = message["decryptedPayload"]
+    return message["uid"], json.loads(decryptedPayload)["@msg"], json.dumps(message)
+
+
+async def update_message_as_read(pw_did: str, uid: str):
+    messages_to_update = [{
+        "pairwiseDID": pw_did,
+        "uids": [uid]
+    }]
+    await vcx_messages_update_status(json.dumps(messages_to_update))
 
 
 def load_payment_library():
