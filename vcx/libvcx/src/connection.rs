@@ -279,9 +279,12 @@ impl Connection {
 
     fn get_invite_detail(&self) -> &Option<InviteDetail> { &self.invite_detail }
     fn set_invite_detail(&mut self, id: InviteDetail) {
-        self.version = match id.version.is_some() {
-            true => Some(settings::ProtocolTypes::from(id.version.clone().unwrap())),
-            false => Some(settings::get_connecting_protocol_version()),
+        let invite_protocol_version =
+            settings::ProtocolTypes::from(id.version.clone().unwrap_or(ProtocolTypes::V1.to_string()));
+
+        self.version = match &invite_protocol_version {
+            ProtocolTypes::V1 => Some(invite_protocol_version),
+            _ => Some(settings::get_protocol_type())
         };
         self.invite_detail = Some(id);
     }
