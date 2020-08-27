@@ -13,6 +13,7 @@ from src.utils import run_coroutine, PROTOCOL_VERSION
 
 logger = logging.getLogger(__name__)
 
+logging.basicConfig(level=5)
 
 async def demo():
     logger.info("Anoncreds sample -> started")
@@ -85,8 +86,8 @@ async def demo():
     prover['cred_values'] = json.dumps({
         "sex": {"raw": "male", "encoded": "5944657099558967239210949258394887428692050081607692519917050011144233"},
         "name": {"raw": "Alex", "encoded": "1139481716457488690172217916278103335"},
-        "height": {"raw": "175", "encoded": "175"},
-        "age": {"raw": "28", "encoded": "28"}
+        # "height": {"raw": "175", "encoded": "175"},
+        # "age": {"raw": "28", "encoded": "28"}
     })
     issuer['cred_values'] = prover['cred_values']
     issuer['cred_req'] = prover['cred_req']
@@ -109,7 +110,6 @@ async def demo():
             'attr1_referent': {'name': 'name'}
         },
         'requested_predicates': {
-            'predicate1_referent': {'name': 'age', 'p_type': '>=', 'p_value': 18}
         }
     })
     prover['proof_req'] = verifier['proof_req']
@@ -123,18 +123,13 @@ async def demo():
                                                                              'attr1_referent', 10)
     prover['cred_for_attr1'] = json.loads(creds_for_attr1)[0]['cred_info']
 
-    # Prover gets Credentials for predicate1_referent
-    creds_for_predicate1 = await anoncreds.prover_fetch_credentials_for_proof_req(prover['cred_search_handle'],
-                                                                                  'predicate1_referent', 10)
-    prover['cred_for_predicate1'] = json.loads(creds_for_predicate1)[0]['cred_info']
-
     await anoncreds.prover_close_credentials_search_for_proof_req(prover['cred_search_handle'])
 
     # 11. Prover create Proof for Proof Request
     prover['requested_creds'] = json.dumps({
         'self_attested_attributes': {},
         'requested_attributes': {'attr1_referent': {'cred_id': prover['cred_for_attr1']['referent'], 'revealed': True}},
-        'requested_predicates': {'predicate1_referent': {'cred_id': prover['cred_for_predicate1']['referent']}}
+        'requested_predicates': {}
     })
 
     schemas_json = json.dumps({prover['schema_id']: json.loads(prover['schema'])})
