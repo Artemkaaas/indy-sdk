@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 
 async def demo():
-    logger.info("Anoncreds sample -> started")
+    print("Anoncreds sample -> started")
 
     issuer = {
         'did': 'NcYxiDXkpYi6ov5FcYDi1e',
@@ -45,11 +45,14 @@ async def demo():
     schema = {
         'name': 'gvt',
         'version': '1.0',
-        'attributes': '["age", "sex", "height", "name"]'
+        'attributes': '["First Name’s", "age", "sex", "height", "name"]'
     }
     issuer['schema_id'], issuer['schema'] = await anoncreds.issuer_create_schema(issuer['did'], schema['name'],
                                                                                  schema['version'],
                                                                                  schema['attributes'])
+    print("Schema")
+    print(issuer['schema'])
+
     store[issuer['schema_id']] = issuer['schema']
 
     # 4. Issuer create Credential Definition for Schema
@@ -61,6 +64,8 @@ async def demo():
     issuer['cred_def_id'], issuer['cred_def'] = await anoncreds.issuer_create_and_store_credential_def(
         issuer['wallet'], issuer['did'], issuer['schema'], cred_def['tag'], cred_def['type'], cred_def['config'])
     store[issuer['cred_def_id']] = issuer['cred_def']
+    print("Cred Def")
+    print(issuer['cred_def'])
 
     # 5. Prover create Master Secret
     prover['master_secret_id'] = await anoncreds.prover_create_master_secret(prover['wallet'], None)
@@ -68,6 +73,9 @@ async def demo():
     #  6. Issuer create Credential Offer
     issuer['cred_offer'] = await anoncreds.issuer_create_credential_offer(issuer['wallet'], issuer['cred_def_id'])
     prover['cred_offer'] = issuer['cred_offer']
+
+    print("Cred Offer")
+    print(issuer['cred_offer'])
 
     cred_offer = json.loads(prover['cred_offer'])
     prover['cred_def_id'] = cred_offer['cred_def_id']
@@ -83,6 +91,7 @@ async def demo():
 
     # 8. Issuer create Credential
     prover['cred_values'] = json.dumps({
+        "First Name’s": {"raw": "Amy 1 Tester’s", "encoded": "43254354654654654645543244444444444444443"},
         "sex": {"raw": "male", "encoded": "5944657099558967239210949258394887428692050081607692519917050011144233"},
         "name": {"raw": "Alex", "encoded": "1139481716457488690172217916278103335"},
         "height": {"raw": "175", "encoded": "175"},
@@ -175,7 +184,7 @@ async def demo():
     await wallet.close_wallet(prover['wallet'])
     await wallet.delete_wallet(prover['wallet_config'], prover['wallet_credentials'])
 
-    logger.info("Anoncreds sample -> completed")
+    print("Anoncreds sample -> completed")
 
 
 if __name__ == '__main__':
