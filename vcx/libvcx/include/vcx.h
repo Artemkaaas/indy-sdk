@@ -641,6 +641,29 @@ vcx_error_t vcx_connection_send_answer(vcx_u32_t command_handle,
                                        const char* answer,
                                        void (*cb)(vcx_command_handle_t, vcx_error_t));
 
+/// Send a message to invite another side to take a particular action.
+/// The action is represented as a `goal_code` and should be described in a way that can be automated.
+///
+/// The related protocol can be found here:
+///     https://github.com/hyperledger/aries-rfcs/blob/ecf4090b591b1d424813b6468f5fc391bf7f495b/features/0547-invite-action-protocol
+///
+/// #params
+///
+/// command_handle: command handle to map callback to user context.
+///
+/// connection_handle: handle pointing to Connection to send invite action.
+///
+/// goal_code: A code the receiver may want to display to the user or use in automatically deciding what to do after receiving the message.
+///
+/// cb: Callback that provides success or failure of request
+///
+/// #Returns
+/// Error code as a u32
+vcx_error_t vcx_connection_send_invite_action(vcx_u32_t command_handle,
+                                              vcx_connection_handle_t connection_handle,
+                                              const char* goal_code,
+                                              void (*cb)(vcx_command_handle_t, vcx_error_t));
+
 // Takes the Connection object and returns callers pw_did associated with this connection
 //
 // #Params

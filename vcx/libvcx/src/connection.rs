@@ -27,6 +27,7 @@ use v3::handlers::connection::agent::AgentInfo;
 use v3::messages::connection::invite::Invitation as InvitationV3;
 use v3::messages::a2a::A2AMessage;
 use v3::handlers::connection::types::CompletedConnection;
+use v3::messages::invite_action::invite::Invite as InviteForAction;
 
 use settings::ProtocolTypes;
 
@@ -461,6 +462,44 @@ impl Connection {
         debug!("Connection {}: Sent generic message", self.source_id);
         trace!("Connection::send_generic_message <<< msg_uid: {:?}", secret!(msg_uid));
         return Ok(msg_uid);
+    }
+
+
+    pub fn send_invite_action(&self, goal_code: String) -> VcxResult<()> {
+        trace!("Connection::send_invite_action >>> goal_code: {:?}", secret!(goal_code));
+        debug!("Connection {}: Sending invitation for action", self.source_id);
+
+        if self.state != VcxStateType::VcxStateAccepted {
+            return Err(VcxError::from_msg(VcxErrorKind::NotReady, format!("Connection {} is not in Accepted state. Not ready to send message", self.source_id)));
+        }
+
+        let invite = InviteForAction::create()
+            .set_goal_code(goal_code)
+            .to_a2a_message();
+
+        let response =
+            ::messages::send_message()
+                .to(&self.get_pw_did())?
+                .to_vk(&self.get_pw_verkey())?
+                .msg_type(&RemoteMessageType::Other(String::from("invite-action")))?
+                .version(self.version.clone())?
+                .edge_agent_payload(
+                    &self.get_pw_verkey(),
+                    &self.get_their_pw_verkey(),
+                    &json!(invite).to_string(),
+                    PayloadKinds::Other(String::from("invite-action")),
+                    None)?
+                .agent_did(&self.get_agent_did())?
+                .agent_vk(&self.get_agent_verkey())?
+                .set_title("Take the action")?
+                .set_detail("Take the action")?
+                .status_code(&MessageStatusCode::Accepted)?
+                .send_secure()
+                .map_err(|err| err.extend("Cannot send generic message"))?;
+
+        debug!("Connection {}: Sent send invite action", self.source_id);
+        trace!("Connection::send_invite_action <<<");
+        return Ok(());
     }
 }
 
@@ -1392,6 +1431,19 @@ pub fn send_answer(connection_handle: u32, question: String, answer: String) -> 
                                                          "Proprietary Connection type doesn't support this action: `send_answer`.")),
             Connections::V3(ref mut connection) => {
                 connection.send_answer(question.clone(), answer.clone())
+            }
+        }
+    })
+}
+
+pub fn send_invite_action(connection_handle: u32, goal_code: String) -> VcxResult<()> {
+    CONNECTION_MAP.get_mut(connection_handle, |connection| {
+        match connection {
+            Connections::V1(ref connection) => {
+                connection.send_invite_action(goal_code.clone())
+            },
+            Connections::V3(ref mut connection) => {
+                connection.send_invite_action(goal_code.clone())
             }
         }
     })

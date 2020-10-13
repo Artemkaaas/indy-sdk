@@ -27,14 +27,14 @@ TAA_ACCEPT = bool(os.getenv("TAA_ACCEPT", "0") == "1")
 # 'wallet_key': encryption key for encoding wallet
 # 'payment_method': method that will be used for payments
 provisionConfig = {
-    'agency_url': 'http://localhost:8080',
-    'agency_did': 'VsKV7grR1BUE29mG2Fm2kX',
-    'agency_verkey': 'Hezce2UWMZ3wUhVkh2LfKSs8nDzWwzs2Win7EzNN3YaR',
+    'agency_url': 'https://eas-team1.pdev.evernym.com',
+    'agency_did': 'CV65RFpeCtPu82hNF9i61G',
+    'agency_verkey': '7G3LhXFKXKTMv7XGx1Qc9wqkMbwcU2iLBHL8x1JXWWC2',
     'wallet_name': 'faber_wallet',
     'wallet_key': '123',
     'payment_method': 'null',
     'enterprise_seed': '000000000000000000000000Trustee1',
-    'protocol_type': '3.0',
+    'protocol_type': '1.0',
 }
 
 
@@ -50,6 +50,9 @@ async def main():
     config['institution_logo_url'] = 'http://robohash.org/234'
     config['genesis_path'] = 'docker.txn'
     config['payment_method'] = 'null'
+    config[
+        'author_agreement'] = "{\"taaDigest\":\"3ae97ea501bd26b81c8c63da2c99696608517d6df8599210c7edaa7e2c719d65\",\"acceptanceMechanismType\":\"at_submission\",\"timeOfAcceptance\":" + str(
+        1594193805) + "}"
 
     print("#2 Initialize libvcx with new configuration")
     await vcx_init_with_config(json.dumps(config))
@@ -65,6 +68,7 @@ async def main():
             "3 - send ping \n "
             "4 - update connection state \n "
             "5 - establish out-of-band connection \n "
+            "6 - send invite action \n "
             "else finish \n") \
             .lower().strip()
         if answer == '0':
@@ -85,6 +89,8 @@ async def main():
             await connection_to_alice.update_state()
         elif answer == '5':
             connection_to_alice = await outofband_connect()
+        elif answer == '6':
+            await connection_to_alice.send_invite_action('automotive.inspect.tire')
         else:
             break
 

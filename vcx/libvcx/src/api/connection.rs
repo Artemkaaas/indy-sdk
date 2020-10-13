@@ -1611,6 +1611,61 @@ pub extern fn vcx_connection_send_answer(command_handle: u32,
     error::SUCCESS.code_num
 }
 
+/// Send a message to invite another side to take a particular action.
+/// The action is represented as a `goal_code` and should be described in a way that can be automated.
+///
+/// The related protocol can be found here:
+///     https://github.com/hyperledger/aries-rfcs/blob/ecf4090b591b1d424813b6468f5fc391bf7f495b/features/0547-invite-action-protocol
+///
+/// #params
+///
+/// command_handle: command handle to map callback to user context.
+///
+/// connection_handle: handle pointing to Connection to send invite action.
+///
+/// goal_code: A code the receiver may want to display to the user or use in automatically deciding what to do after receiving the message.
+///
+/// cb: Callback that provides success or failure of request
+///
+/// #Returns
+/// Error code as a u32
+#[no_mangle]
+pub extern fn vcx_connection_send_invite_action(command_handle: u32,
+                                                connection_handle: u32,
+                                                goal_code: *const c_char,
+                                                cb: Option<extern fn(xcommand_handle: u32, err: u32)>) -> u32 {
+    info!("vcx_connection_send_invite_action >>>");
+
+    check_useful_c_str!(goal_code, VcxErrorKind::InvalidOption);
+    check_useful_c_callback!(cb, VcxErrorKind::InvalidOption);
+
+    let source_id = get_source_id(connection_handle).unwrap_or_default();
+
+    trace!("vcx_connection_send_invite_action(command_handle: {}, connection_handle: {}, invite: {}), source_id: {:?}",
+           command_handle, connection_handle, secret!(goal_code), source_id);
+
+    spawn(move || {
+        match send_invite_action(connection_handle, goal_code) {
+            Ok(()) => {
+                trace!("vcx_connection_send_invite_action_cb(command_handle: {}, rc: {})",
+                       command_handle, error::SUCCESS.message);
+                cb(command_handle, error::SUCCESS.code_num);
+            }
+            Err(e) => {
+                warn!("vcx_connection_send_invite_action_cb(command_handle: {}, rc: {})",
+                      command_handle, e);
+
+                cb(command_handle, e.into());
+            }
+        };
+
+        Ok(())
+    });
+
+    error::SUCCESS.code_num
+}
+
+
 /// Get the information about the connection state.
 ///
 /// Note: This method can be used for `aries` communication method only.

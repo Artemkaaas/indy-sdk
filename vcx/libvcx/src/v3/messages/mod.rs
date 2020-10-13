@@ -17,3 +17,4 @@ pub mod localization;
 pub mod outofband;
 pub mod questionanswer;
 pub mod committedanswer;
+pub mod invite_action;

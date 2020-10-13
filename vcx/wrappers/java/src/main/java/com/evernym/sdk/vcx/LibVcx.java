@@ -243,6 +243,11 @@ public abstract class LibVcx {
         public int vcx_connection_send_answer(int command_handle, int connection_handle, String question, String answer, Callback cb);
 
         /**
+         * Send a message to invite another side to take a particular action.
+         */
+        public int vcx_connection_send_invite_action(int command_handle, int connection_handle, String goal_code, Callback cb);
+
+        /**
          * The API represents an Issuer side in credential issuance process.
          * Assumes that pairwise connection between Issuer and Holder is already established.
          */

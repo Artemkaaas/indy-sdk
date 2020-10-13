@@ -41,6 +41,8 @@ use v3::messages::questionanswer::answer::Answer;
 use v3::messages::committedanswer::question::Question as CommitedQuestion;
 use v3::messages::committedanswer::answer::Answer as CommitedAnswer;
 
+use v3::messages::invite_action::invite::Invite as InviteForAction;
+
 #[derive(Debug, PartialEq)]
 pub enum A2AMessage {
     /// routing
@@ -95,6 +97,8 @@ pub enum A2AMessage {
     HandshakeReuse(HandshakeReuse),
     HandshakeReuseAccepted(HandshakeReuseAccepted),
 
+    // invite-action
+    InviteForAction(InviteForAction),
 
     /// Any Raw Message
     Generic(Value),
@@ -262,6 +266,11 @@ impl<'de> Deserialize<'de> for A2AMessage {
                     .map(|msg| A2AMessage::HandshakeReuseAccepted(msg))
                     .map_err(de::Error::custom)
             }
+            (MessageFamilies::InviteAction, A2AMessage::INVITE_FOR_ACTION) => {
+                InviteForAction::deserialize(value)
+                    .map(|msg| A2AMessage::InviteForAction(msg))
+                    .map_err(de::Error::custom)
+            }
             (_, _) => {
                 warn!("Unexpected @type field: {}", value["@type"]);
                 Ok(A2AMessage::Generic(value))
@@ -319,6 +328,7 @@ impl Serialize for A2AMessage {
             A2AMessage::Answer(msg) => set_a2a_message_type_with_did(msg, MessageFamilies::QuestionAnswer, A2AMessage::ANSWER),
             A2AMessage::CommittedQuestion(msg) => set_a2a_message_type_with_did(msg, MessageFamilies::Committedanswer, A2AMessage::QUESTION),
             A2AMessage::CommittedAnswer(msg) => set_a2a_message_type_with_did(msg, MessageFamilies::Committedanswer, A2AMessage::ANSWER),
+            A2AMessage::InviteForAction(msg) => set_a2a_message_type_with_endpoint(msg, MessageFamilies::InviteAction, A2AMessage::INVITE_FOR_ACTION),
             A2AMessage::Generic(msg) => Ok(msg.clone())
         }.map_err(ser::Error::custom)?;
 
@@ -384,6 +394,7 @@ impl A2AMessage {
     pub const OUTOFBAND_HANDSHAKE_REUSE_ACCEPTED: &'static str = "handshake-reuse-accepted";
     pub const QUESTION: &'static str = "question";
     pub const ANSWER: &'static str = "answer";
+    pub const INVITE_FOR_ACTION: &'static str = "invite";
 }
 
 #[macro_export]

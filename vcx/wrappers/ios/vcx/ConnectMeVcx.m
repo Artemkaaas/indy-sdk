@@ -675,6 +675,26 @@ void VcxWrapperCommonNumberStringCallback(vcx_command_handle_t xcommand_handle,
     }
 }
 
+- (void)connectionSendInviteAction:(VcxHandle)connectionHandle
+                          goalCode:(NSString *)goalCode
+                    withCompletion:(void (^)(NSError *error))completion
+{
+    vcx_command_handle_t handle= [[VcxCallbacks sharedInstance] createCommandHandleFor:completion];
+    const char *goalCode_ctype = [goalCode cStringUsingEncoding:NSUTF8StringEncoding];
+    vcx_error_t ret = vcx_connection_send_invite_action(handle,
+                                                        connectionHandle,
+                                                        goalCode_ctype,
+                                                        VcxWrapperCommonCallback);
+    if( ret != 0 )
+    {
+        [[VcxCallbacks sharedInstance] deleteCommandHandleFor: handle];
+
+        dispatch_async(dispatch_get_main_queue(), ^{
+            completion([NSError errorFromVcxError: ret]);
+        });
+    }
+}
+
 - (void)connectionSignData:(VcxHandle)connectionHandle
                   withData:(NSData *)dataRaw
             withCompletion:(void (^)(NSError *error, NSData *signature_raw, vcx_u32_t signature_len))completion

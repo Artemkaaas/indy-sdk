@@ -15,6 +15,7 @@ pub enum MessageFamilies {
     Outofband,
     QuestionAnswer,
     Committedanswer,
+    InviteAction,
     Unknown(String)
 }
 
@@ -37,6 +38,7 @@ impl MessageFamilies {
             MessageFamilies::Outofband => "1.0",
             MessageFamilies::QuestionAnswer => "1.0",
             MessageFamilies::Committedanswer => "1.0",
+            MessageFamilies::InviteAction => "0.9",
             MessageFamilies::Unknown(_) => "1.0"
         }
     }
@@ -56,7 +58,8 @@ impl MessageFamilies {
             MessageFamilies::QuestionAnswer |
             MessageFamilies::Committedanswer |
             MessageFamilies::Unknown(_) => format!("{}/{}/{}", Self::DID, self.to_string(), self.version().to_string()),
-            MessageFamilies::Outofband => format!("{}/{}/{}", Self::ENDPOINT, self.to_string(), self.version().to_string()),
+            MessageFamilies::Outofband |
+            MessageFamilies::InviteAction => format!("{}/{}/{}", Self::ENDPOINT, self.to_string(), self.version().to_string()),
         }
     }
 
@@ -75,6 +78,7 @@ impl MessageFamilies {
             MessageFamilies::Outofband => Some((None, Some(Actors::Receiver))),
             MessageFamilies::QuestionAnswer => Some((None, Some(Actors::Receiver))),
             MessageFamilies::Committedanswer => Some((None, Some(Actors::Receiver))),
+            MessageFamilies::InviteAction => Some((Some(Actors::Inviter), Some(Actors::Invitee))),
             MessageFamilies::Unknown(_) => None
         }
     }
@@ -96,6 +100,7 @@ impl From<String> for MessageFamilies {
             "out-of-band" => MessageFamilies::Outofband,
             "questionanswer" => MessageFamilies::QuestionAnswer,
             "committedanswer" => MessageFamilies::Committedanswer,
+            "invite-action" => MessageFamilies::InviteAction,
             family @ _ => MessageFamilies::Unknown(family.to_string())
         }
     }
@@ -117,6 +122,7 @@ impl ::std::string::ToString for MessageFamilies {
             MessageFamilies::Outofband => "out-of-band".to_string(),
             MessageFamilies::QuestionAnswer => "questionanswer".to_string(),
             MessageFamilies::Committedanswer => "committedanswer".to_string(),
+            MessageFamilies::InviteAction => "invite-action".to_string(),
             MessageFamilies::Unknown(family) => family.to_string()
         }
     }

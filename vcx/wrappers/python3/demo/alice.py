@@ -15,14 +15,14 @@ from vc_auth_oidc.alice_vc_auth import handle_challenge
 # logging.basicConfig(level=logging.DEBUG) uncomment to get logs
 
 provisionConfig = {
-    'agency_url': 'http://localhost:8080',
-    'agency_did': 'VsKV7grR1BUE29mG2Fm2kX',
-    'agency_verkey': 'Hezce2UWMZ3wUhVkh2LfKSs8nDzWwzs2Win7EzNN3YaR',
+    'agency_url': 'https://agency-team1.pdev.evernym.com',
+    'agency_did': 'TGLBMTcW9fHdkSqown9jD8',
+    'agency_verkey': 'FKGV9jKvorzKPtPJPNLZkYPkLhiS1VbxdvBgd1RjcQHR',
     'wallet_name': 'alice_wallet',
     'wallet_key': '123',
     'payment_method': 'null',
     'enterprise_seed': '000000000000000000000000Trustee1',
-    'protocol_type': '3.0',
+    'protocol_type': '1.0',
 }
 
 
@@ -38,6 +38,7 @@ async def main():
             "3 - pass vc_auth_oidc-challenge \n "
             "4 - check for questions \n "
             "5 - establish out-of-band connection \n "
+            "6 - check for messages\n "
             "else finish \n") \
             .lower().strip()
         if answer == '0':
@@ -92,6 +93,9 @@ async def main():
             await update_message_as_read(pw_did, uid)
         elif answer == '5':
             connection_to_faber = await outofband_connect()
+        elif answer == '6':
+            pw_did = await connection_to_faber.get_my_pw_did()
+            uid, question, _ = await download_message(pw_did, None)
         else:
             break
 

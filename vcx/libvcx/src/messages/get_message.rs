@@ -484,6 +484,9 @@ impl Message {
             message @ AriesA2AMessage::BasicMessage(_) => {
                 (PayloadKinds::Other(String::from(AriesA2AMessage::BASIC_MESSAGE)), json!(&message).to_string())
             }
+            invite @ AriesA2AMessage::InviteForAction(_) => {
+                (PayloadKinds::Other(String::from("invite-action")), json!(&invite).to_string())
+            }
             msg => {
                 let msg = json!(&msg).to_string();
                 (PayloadKinds::Other(String::from("aries")), msg)

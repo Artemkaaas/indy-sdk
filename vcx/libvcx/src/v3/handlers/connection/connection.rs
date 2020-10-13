@@ -289,6 +289,13 @@ impl Connection {
         self.handle_message(DidExchangeMessages::SendAnswer((question, response)))
     }
 
+    pub fn send_invite_action(&mut self, goal_code: String) -> VcxResult<()> {
+        trace!("Connection::send_invite_action >>> goal_code: {:?}", secret!(goal_code));
+        debug!("Connection {}: Sending invitation for taking an action", self.source_id());
+
+        self.handle_message(DidExchangeMessages::SendInviteAction(goal_code))
+    }
+
     pub fn get_connection_info(&self) -> VcxResult<String> {
         trace!("Connection::get_connection_info >>>");
         debug!("Connection {}: Getting information", self.source_id());

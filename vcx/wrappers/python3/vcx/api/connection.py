@@ -820,6 +820,31 @@ class Connection(VcxStateful):
                       c_answer,
                       Connection.send_answer.cb)
 
+    async def send_invite_action(self, goal_code: str):
+        """
+        Send a message to invite another side to take a particular action.
+        The action is represented as a `goal_code` and should be described in a way that can be automated.
+
+        The related protocol can be found here:
+            https://github.com/hyperledger/aries-rfcs/blob/ecf4090b591b1d424813b6468f5fc391bf7f495b/features/0547-invite-action-protocol
+
+        :param goal_code: A code the receiver may want to display to the user or use in
+                          automatically deciding what to do after receiving the message.
+
+        :return: no value
+        """
+        if not hasattr(Connection.send_invite_action, "cb"):
+            self.logger.debug("vcx_connection_send_invite_action: Creating callback")
+            Connection.send_invite_action.cb = create_cb(CFUNCTYPE(None, c_uint32, c_uint32))
+
+        c_connection_handle = c_uint32(self.handle)
+        c_goal_code = c_char_p(goal_code.encode('utf-8'))
+
+        await do_call('vcx_connection_send_invite_action',
+                      c_connection_handle,
+                      c_goal_code,
+                      Connection.send_invite_action.cb)
+
     async def get_my_pw_did(self) -> str:
         if not hasattr(Connection.get_my_pw_did, "cb"):
             self.logger.debug("get_my_pw_did: Creating callback")

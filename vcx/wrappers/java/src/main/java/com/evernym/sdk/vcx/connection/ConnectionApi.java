@@ -1192,4 +1192,35 @@ public class ConnectionApi extends VcxJava.API {
 
 		return future;
 	}
+
+	/**
+	 * Send a message to invite another side to take a particular action.
+	 * The action is represented as a `goal_code` and should be described in a way that can be automated.
+	 * <p>
+	 * The related protocol can be found here:
+	 *     https://github.com/hyperledger/aries-rfcs/blob/ecf4090b591b1d424813b6468f5fc391bf7f495b/features/0547-invite-action-protocol
+	 *
+	 * @param  connectionHandle handle pointing to a Connection object to send answer message.
+	 * @param  goalCode         A code the receiver may want to display to the user or use in automatically
+	 *                          deciding what to do after receiving the message.
+	 *
+	 * @return                  void
+	 *
+	 * @throws VcxException     If an exception occurred in Libvcx library.
+	 */
+	public static CompletableFuture<Void> connectionSendInviteAction(
+			int connectionHandle,
+			String goalCode
+	) throws VcxException {
+		ParamGuard.notNull(goalCode, "goalCode");
+
+		logger.debug("connectionSendInviteAction() called with: connectionHandle = [" + connectionHandle + "],  goalCode = [****]");
+		CompletableFuture<Void> future = new CompletableFuture<>();
+		int commandHandle = addFuture(future);
+
+		int result = LibVcx.api.vcx_connection_send_invite_action(commandHandle, connectionHandle, goalCode, voidCb);
+		checkResult(result);
+
+		return future;
+	}
 }

@@ -22,6 +22,7 @@ use v3::messages::questionanswer::answer::Answer;
 use v3::messages::committedanswer::question::Question as CommittedQuestion;
 use v3::messages::committedanswer::answer::Answer as CommittedAnswer;
 use v3::handlers::connection::types::{CompletedConnection, OutofbandMeta, Invitations};
+use v3::messages::invite_action::invite::Invite as InviteForAction;
 
 use std::collections::HashMap;
 
@@ -533,6 +534,14 @@ impl CompleteState {
                 self.handle_send_answer(question, response, agent_info)?;
                 DidExchangeState::Completed(self)
             }
+            DidExchangeMessages::SendInviteAction(goal_code) => {
+                self.handle_send_invite_action(goal_code, agent_info)?;
+                DidExchangeState::Completed(self)
+            }
+            DidExchangeMessages::InviteActionReceived(invite) => {
+                self.handle_invite_action(&invite)?;
+                DidExchangeState::Completed(self)
+            }
             message_ => {
                 warn!("DidExchangeSM: Unexpected action to update state {:?}", message_);
                 DidExchangeState::Completed(self)
@@ -707,6 +716,25 @@ impl CompleteState {
     pub fn handle_committed_answer(&self, answer: &CommittedAnswer) -> VcxResult<()> {
         trace!("CompleteState:handle_committed_answer >>> answer: {:?}", secret!(answer));
         debug!("handling received connection committed answer message");
+        Ok(())
+    }
+
+    fn handle_send_invite_action(&self, goal_code: String, agent_info: &AgentInfo) -> VcxResult<()> {
+        trace!("CompleteState:handle_send_invite_action >>> goal_code: {:?}, agent_info: {:?}", secret!(goal_code), secret!(agent_info));
+        debug!("sending invite to take action for connection");
+
+        let invite = InviteForAction::create()
+            .set_goal_code(goal_code);
+
+        agent_info.send_message(&invite.to_a2a_message(), &self.did_doc).ok();
+
+        trace!("CompleteState:handle_send_invite_action <<<");
+        Ok(())
+    }
+
+    pub fn handle_invite_action(&self, invite: &InviteForAction) -> VcxResult<()> {
+        trace!("CompleteState:handle_invite_action >>> answer: {:?}", secret!(invite));
+        debug!("handling received invite for action");
         Ok(())
     }
 
